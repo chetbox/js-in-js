@@ -1,0 +1,20 @@
+{
+  "name": "js-in-js",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/jexl": "^2.3.4",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.8"
+  },
+  "dependencies": {
+    "jexl": "^2.3.0",
+    "js-interpreter": "^5.1.0"
+  }
+}

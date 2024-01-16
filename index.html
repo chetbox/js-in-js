@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JS in JS</title>
+  </head>
+  <body>
+    <div id="app">
+      <div class="context">
+        <h2>Context (JSON)</h2>
+        <textarea id="context" class="expression" rows="10" cols="50">
+{
+  "one": "one",
+  "two": [2, "two"],
+  "three": { 
+    "items": [3, "three", false]
+  }
+}
+</textarea
+        >
+        <div id="context-error"></div>
+      </div>
+      <div class="langs">
+        <section id="jexl">
+          <h1>JEXL</h1>
+          <textarea class="expression" rows="10" cols="50">
+three.items</textarea
+          >
+          <div>↓</div>
+          <textarea class="result" rows="5" cols="50" disabled></textarea>
+          <div class="performance"></div>
+        </section>
+        <section id="js-interpreter">
+          <h1>JS-Interpreter</h1>
+          <textarea class="expression" rows="10" cols="50">
+three.items</textarea
+          >
+          <div>↓</div>
+          <textarea class="result" rows="5" cols="50" disabled></textarea>
+          <div class="performance"></div>
+        </section>
+      </div>
+      <section>
+        <h2>Benchmarks</h2>
+        <button id="benchmark">Run benchmarks</button>
+      </section>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

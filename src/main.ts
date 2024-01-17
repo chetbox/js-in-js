@@ -2,6 +2,9 @@ import "./style.css";
 import jexl from "jexl";
 import JsInterpreter from "js-interpreter";
 import { QuickJSContext, QuickJSHandle, getQuickJS } from "quickjs-emscripten";
+import "ses";
+
+// lockdown(); // TODO: We should enable this for SES
 
 const QuickJS = await getQuickJS();
 
@@ -33,6 +36,13 @@ const quickjsEmscriptenResultOutput =
   document.querySelector<HTMLTextAreaElement>("#quickjs-emscripten .result")!;
 const quickjsEmscriptenPerformanceOutput =
   document.querySelector<HTMLDivElement>("#quickjs-emscripten .performance")!;
+
+const sesInput =
+  document.querySelector<HTMLTextAreaElement>("#ses .expression")!;
+const sesResultOutput =
+  document.querySelector<HTMLTextAreaElement>("#ses .result")!;
+const sesPerformanceOutput =
+  document.querySelector<HTMLDivElement>("#ses .performance")!;
 
 const benchmarkButton =
   document.querySelector<HTMLButtonElement>("#benchmark")!;
@@ -80,28 +90,28 @@ function run<Context, VM>({
   resultElement,
   performanceMetricsElement,
   createVm,
-  addContext,
-  addExpression,
+  setContext,
+  setExpression,
   runExpression,
 }: {
   context: Context;
   expression: string;
   resultElement: HTMLTextAreaElement;
   performanceMetricsElement: HTMLDivElement;
-  createVm: () => VM;
-  addContext?: (vm: VM, context: Context) => void;
-  addExpression?: (vm: VM, expression: string) => void;
+  createVm?: () => VM;
+  setContext?: (vm: VM, context: Context) => VM | void;
+  setExpression?: (vm: VM, expression: string) => VM | void;
   runExpression: (vm: VM, expression: string, context: Context) => any;
 }) {
   const perfMeasurements: number[] = [];
   const start = performance.now();
 
   try {
-    const vm = createVm();
+    let vm = createVm?.() as VM;
     perfMeasurements.push(performance.now() - start);
-    addContext?.(vm, context);
+    vm = setContext?.(vm, context) ?? vm;
     perfMeasurements.push(performance.now() - start);
-    addExpression?.(vm, expression);
+    vm = setExpression?.(vm, expression) ?? vm;
     perfMeasurements.push(performance.now() - start);
     const result = runExpression(vm, expression, context);
     perfMeasurements.push(performance.now() - start);
@@ -129,7 +139,6 @@ function runAll() {
       expression: jexlInput.value,
       resultElement: jexlResultOutput,
       performanceMetricsElement: jexlPerformanceOutput,
-      createVm: () => null,
       runExpression: (_, expression, context) => {
         return jexl.evalSync(expression, context);
       },
@@ -141,7 +150,6 @@ function runAll() {
       expression: jsInterpreterInput.value,
       resultElement: jsInterpreterResultOutput,
       performanceMetricsElement: jsInterpreterPerformanceOutput,
-      createVm: () => null,
       runExpression: (_, expression, context) => {
         let result: any;
         let error: any;
@@ -187,7 +195,7 @@ function runAll() {
       resultElement: quickjsEmscriptenResultOutput,
       performanceMetricsElement: quickjsEmscriptenPerformanceOutput,
       createVm: () => QuickJS.newContext(),
-      addContext: (vm, context) => {
+      setContext: (vm, context) => {
         Object.entries(context).forEach(([key, value]) => {
           setQuickJsValue(vm, vm.global, key, value);
         });
@@ -204,6 +212,20 @@ function runAll() {
           result.value.dispose();
           return jsResult;
         }
+      },
+    });
+
+    // SES
+    run<any, Compartment>({
+      context,
+      expression: sesInput.value,
+      resultElement: sesResultOutput,
+      performanceMetricsElement: sesPerformanceOutput,
+      setContext: (_, context) => {
+        return new Compartment(context);
+      },
+      runExpression: (vm, expression) => {
+        return vm.evaluate(expression);
       },
     });
   } catch (error) {

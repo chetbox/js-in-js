@@ -5,7 +5,7 @@ import JsInterpreter from "js-interpreter";
 import { QuickJSContext, QuickJSHandle, getQuickJS } from "quickjs-emscripten";
 import "ses";
 
-// lockdown(); // TODO: We should enable this for SES
+// lockdown(); // TODO: We should enable this for SES but it breaks JS-Interpreter
 
 const QuickJS = await getQuickJS();
 
@@ -141,8 +141,8 @@ function run<Context, VM>({
   }
 
   performanceMetricsElement.textContent =
-    perfMeasurements.map((ms) => `${ms.toFixed(2)} ms`).join(" + ") +
-    ` = ${perfMeasurements.reduce((p, x) => p + x).toFixed(2)} ms`;
+    perfMeasurements.map((ms) => `${ms.toFixed(3)} ms`).join(" + ") +
+    ` = ${perfMeasurements.reduce((p, x) => p + x).toFixed(3)} ms`;
 }
 
 function runAll() {
@@ -244,6 +244,7 @@ function runAll() {
       setContext: (_, context) => {
         return new Compartment(context);
       },
+      // TODO: optimise by compiling expression first
       runExpression: (vm, expression) => {
         return vm.evaluate(expression);
       },

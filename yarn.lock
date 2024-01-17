@@ -124,6 +124,39 @@
   resolved "https://registry.yarnpkg.com/@esbuild/win32-x64/-/win32-x64-0.19.11.tgz#a5d300008960bb39677c46bf16f53ec70d8dee04"
   integrity sha512-vfkhltrjCAb603XaFhqhAF4LGDi2M4OrCRrFusyQ+iTLQ/o60QQXxc9cZC/FFpihBI9N1Grn6SMKVJ4KP7Fuiw==
 
+"@jitl/quickjs-ffi-types@0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@jitl/quickjs-ffi-types/-/quickjs-ffi-types-0.26.0.tgz#b69323d2df200e327e28fd01afbede20b00d3eae"
+  integrity sha512-49pRXLrdnhglSm5tzBcoa8Q0H5Gscm9IgzQKLeBWYJnDzLoWw4SLZspRTxfxB168uUmwszWy0uBCG6QZYvDTxw==
+
+"@jitl/quickjs-wasmfile-debug-asyncify@0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@jitl/quickjs-wasmfile-debug-asyncify/-/quickjs-wasmfile-debug-asyncify-0.26.0.tgz#381503e658ffee91897abc1b5386713ebaed5d36"
+  integrity sha512-uApydMFA2re/zR2ITUjpua7AD9wJgoPayyldxAh7c0Y0eh+Q1ttJL54HzfEU6Jh4kEver28YpqaEcj9/4d96bw==
+  dependencies:
+    "@jitl/quickjs-ffi-types" "0.26.0"
+
+"@jitl/quickjs-wasmfile-debug-sync@0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@jitl/quickjs-wasmfile-debug-sync/-/quickjs-wasmfile-debug-sync-0.26.0.tgz#2ac807e2ed7fa519ac05e5e2357f0bd1257d3ab6"
+  integrity sha512-M5BeymxjnFunAWHwfgj3uEv0LvWdzjHugOuieygVMoi+fQ020o4rlCcjbttqZZiFgII8HWV4jbBm4vwsbgbCaw==
+  dependencies:
+    "@jitl/quickjs-ffi-types" "0.26.0"
+
+"@jitl/quickjs-wasmfile-release-asyncify@0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@jitl/quickjs-wasmfile-release-asyncify/-/quickjs-wasmfile-release-asyncify-0.26.0.tgz#a1893d1e818455725e106028039f15e48d318615"
+  integrity sha512-TLgIZAv292dW2I6PoM2yKPR5t+XqKDZS/Sezy8pi8rsZamDscjt9AM8f2QA+YNpyUPU4zTcaUX3Ccp5bj8d20w==
+  dependencies:
+    "@jitl/quickjs-ffi-types" "0.26.0"
+
+"@jitl/quickjs-wasmfile-release-sync@0.26.0":
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/@jitl/quickjs-wasmfile-release-sync/-/quickjs-wasmfile-release-sync-0.26.0.tgz#5d8c998ec68e3e7581957dd48dc9351e51e8e92e"
+  integrity sha512-6VLyG89jAcIv/Y868yVaZD1K/uqguH2eHHL5DCXiYHSR6Q614LeRRtAVXygRu8MtOWKZ0O6Uong/KzJ+1hLEHg==
+  dependencies:
+    "@jitl/quickjs-ffi-types" "0.26.0"
+
 "@rollup/rollup-android-arm-eabi@4.9.5":
   version "4.9.5"
   resolved "https://registry.yarnpkg.com/@rollup/rollup-android-arm-eabi/-/rollup-android-arm-eabi-4.9.5.tgz#b752b6c88a14ccfcbdf3f48c577ccc3a7f0e66b9"
@@ -270,6 +303,24 @@ postcss@^8.4.32:
     nanoid "^3.3.7"
     picocolors "^1.0.0"
     source-map-js "^1.0.2"
+
+quickjs-emscripten-core@0.26.0:
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/quickjs-emscripten-core/-/quickjs-emscripten-core-0.26.0.tgz#10724a09cdeca97b68a954d5c168d327a8356a06"
+  integrity sha512-RFglP182/9sTYirChNUsQOIbH70goOMe4rVr0G4aJykIk0m9ogglUvhXP7iANOeA9CFCKB93ORp6DJ5KJctbKg==
+  dependencies:
+    "@jitl/quickjs-ffi-types" "0.26.0"
+
+quickjs-emscripten@^0.26.0:
+  version "0.26.0"
+  resolved "https://registry.yarnpkg.com/quickjs-emscripten/-/quickjs-emscripten-0.26.0.tgz#d540fce2fc2ba027ade9431ab7d9f3c828114e83"
+  integrity sha512-0xv4U8lyWDzXbXZUxoNIGATlI7+j57LmeYZRsQDym3yLDJDnG3o9AVNorQniGRw+CmeuMSufNLtfwPw9U/r3QA==
+  dependencies:
+    "@jitl/quickjs-wasmfile-debug-asyncify" "0.26.0"
+    "@jitl/quickjs-wasmfile-debug-sync" "0.26.0"
+    "@jitl/quickjs-wasmfile-release-asyncify" "0.26.0"
+    "@jitl/quickjs-wasmfile-release-sync" "0.26.0"
+    quickjs-emscripten-core "0.26.0"
 
 regenerator-runtime@^0.14.0:
   version "0.14.1"

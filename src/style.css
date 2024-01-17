@@ -92,3 +92,15 @@ textarea {
   font-size: 0.8em;
   text-align: center;
 }
+
+.controls {
+  margin: 2em;
+  display: flex;
+  gap: 2em;
+  justify-content: center;
+  align-items: center;
+}
+
+input[type="number"] {
+  width: 8ch;
+}

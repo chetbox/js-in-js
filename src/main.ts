@@ -47,6 +47,7 @@ const sesPerformanceOutput =
 
 const benchmarkButton =
   document.querySelector<HTMLButtonElement>("#benchmark")!;
+const runTimesInput = document.querySelector<HTMLInputElement>("#run-times")!;
 
 function setQuickJsValue(
   vm: QuickJSContext,
@@ -105,6 +106,8 @@ function run<Context, VM>({
   runExpression: (vm: VM, expression: string, context: Context) => any;
 }) {
   const perfMeasurements: number[] = [];
+  const runTimes = runTimesInput.valueAsNumber;
+
   let start = performance.now();
 
   try {
@@ -119,9 +122,15 @@ function run<Context, VM>({
     vm = setContext?.(vm, context) ?? vm;
     perfMeasurements.push(performance.now() - start);
 
-    start = performance.now();
-    const result = runExpression(vm, expression, context);
-    perfMeasurements.push(performance.now() - start);
+    const times = [];
+    let result: any;
+    for (let i = 0; i < runTimes; i++) {
+      start = performance.now();
+      result = runExpression(vm, expression, context);
+      times.push(performance.now() - start);
+    }
+    // Mean of N runs
+    perfMeasurements.push(times.reduce((p, x) => p + x) / times.length);
 
     resultElement.value = JSON.stringify(result, null, 2);
     resultElement.classList.remove("error");
@@ -246,10 +255,26 @@ function runAll() {
   }
 }
 
+let runAutomaticallyTimeout: number | null = null;
 document.addEventListener("keyup", (event) => {
   if (event.target instanceof HTMLTextAreaElement) {
-    runAll();
+    const newExpression = event.target.value;
+    [jexlInput, jsInterpreterInput, quickjsEmscriptenInput, sesInput].forEach(
+      (element) => {
+        element.value = newExpression;
+      }
+    );
+
+    if (runAutomaticallyTimeout) {
+      clearTimeout(runAutomaticallyTimeout);
+    }
+    runAutomaticallyTimeout = setTimeout(runAll, 250);
   }
+});
+
+benchmarkButton.addEventListener("click", (e) => {
+  e.preventDefault();
+  runAll();
 });
 
 runAll();

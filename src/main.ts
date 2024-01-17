@@ -1,3 +1,4 @@
+import Expression from "jexl/Expression";
 import "./style.css";
 import jexl from "jexl";
 import JsInterpreter from "js-interpreter";
@@ -91,7 +92,7 @@ function run<Context, VM>({
   performanceMetricsElement,
   createVm,
   setContext,
-  setExpression,
+  compileExpression,
   runExpression,
 }: {
   context: Context;
@@ -99,22 +100,29 @@ function run<Context, VM>({
   resultElement: HTMLTextAreaElement;
   performanceMetricsElement: HTMLDivElement;
   createVm?: () => VM;
+  compileExpression?: (vm: VM, expression: string) => VM | void;
   setContext?: (vm: VM, context: Context) => VM | void;
-  setExpression?: (vm: VM, expression: string) => VM | void;
   runExpression: (vm: VM, expression: string, context: Context) => any;
 }) {
   const perfMeasurements: number[] = [];
-  const start = performance.now();
+  let start = performance.now();
 
   try {
     let vm = createVm?.() as VM;
     perfMeasurements.push(performance.now() - start);
+
+    start = performance.now();
+    vm = compileExpression?.(vm, expression) ?? vm;
+    perfMeasurements.push(performance.now() - start);
+
+    start = performance.now();
     vm = setContext?.(vm, context) ?? vm;
     perfMeasurements.push(performance.now() - start);
-    vm = setExpression?.(vm, expression) ?? vm;
-    perfMeasurements.push(performance.now() - start);
+
+    start = performance.now();
     const result = runExpression(vm, expression, context);
     perfMeasurements.push(performance.now() - start);
+
     resultElement.value = JSON.stringify(result, null, 2);
     resultElement.classList.remove("error");
   } catch (error) {
@@ -134,13 +142,16 @@ function runAll() {
     contextErrorOutput.textContent = null;
 
     // JEXL
-    run({
+    run<any, Expression>({
       context,
       expression: jexlInput.value,
       resultElement: jexlResultOutput,
       performanceMetricsElement: jexlPerformanceOutput,
-      runExpression: (_, expression, context) => {
-        return jexl.evalSync(expression, context);
+      compileExpression: (_, expression) => {
+        return jexl.compile(expression);
+      },
+      runExpression: (jexl, _, context) => {
+        return jexl.evalSync(context);
       },
     });
 

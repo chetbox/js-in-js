@@ -18,6 +18,6 @@
     "jexl": "^2.3.0",
     "js-interpreter": "^5.1.0",
     "quickjs-emscripten": "^0.26.0",
-    "ses": "^1.0.1"
+    "ses": "^1.1.0"
   }
 }

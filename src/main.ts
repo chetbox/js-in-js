@@ -105,22 +105,30 @@ function run<Context, VM>({
   setContext?: (vm: VM, context: Context) => VM | void;
   runExpression: (vm: VM, expression: string, context: Context) => any;
 }) {
-  const perfMeasurements: number[] = [];
+  const perfMeasurements: Partial<
+    Record<"create VM" | "compile expr" | "set globals" | "run (avg)", number>
+  > = {};
   const runTimes = runTimesInput.valueAsNumber;
 
   let start = performance.now();
 
   try {
     let vm = createVm?.() as VM;
-    perfMeasurements.push(performance.now() - start);
+    if (createVm) {
+      perfMeasurements["create VM"] = performance.now() - start;
+    }
 
     start = performance.now();
     vm = compileExpression?.(vm, expression) ?? vm;
-    perfMeasurements.push(performance.now() - start);
+    if (compileExpression) {
+      perfMeasurements["compile expr"] = performance.now() - start;
+    }
 
     start = performance.now();
     vm = setContext?.(vm, context) ?? vm;
-    perfMeasurements.push(performance.now() - start);
+    if (setContext) {
+      perfMeasurements["set globals"] = performance.now() - start;
+    }
 
     const times = [];
     let result: any;
@@ -130,7 +138,8 @@ function run<Context, VM>({
       times.push(performance.now() - start);
     }
     // Mean of N runs
-    perfMeasurements.push(times.reduce((p, x) => p + x) / times.length);
+    perfMeasurements["run (avg)"] =
+      times.reduce((p, x) => p + x) / times.length;
 
     resultElement.value = JSON.stringify(result, null, 2);
     resultElement.classList.remove("error");
@@ -140,9 +149,13 @@ function run<Context, VM>({
     resultElement.classList.add("error");
   }
 
-  performanceMetricsElement.textContent =
-    perfMeasurements.map((ms) => `${ms.toFixed(3)} ms`).join(" + ") +
-    ` = ${perfMeasurements.reduce((p, x) => p + x).toFixed(3)} ms`;
+  performanceMetricsElement.innerHTML = `<table><tbody><tr>${Object.keys(
+    perfMeasurements
+  )
+    .map((label) => `<th>${label}</th>`)
+    .join("")}</tr><tr>${Object.values(perfMeasurements)
+    .map((num) => `<td>${num.toFixed(3)} ms</td>`)
+    .join("")}</tr></tbody></table>`;
 }
 
 function runAll() {

@@ -93,6 +93,10 @@ textarea {
   text-align: center;
 }
 
+.performance table {
+  width: 100%;
+}
+
 .controls {
   margin: 2em;
   display: flex;

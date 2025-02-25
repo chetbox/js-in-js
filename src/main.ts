@@ -271,19 +271,28 @@ function runAll() {
 
 let runAutomaticallyTimeout: number | null = null;
 document.addEventListener("keyup", (event) => {
-  if (event.target instanceof HTMLTextAreaElement) {
+  const inputs = [
+    jexlInput,
+    jsInterpreterInput,
+    quickjsEmscriptenInput,
+    sesInput,
+  ];
+  if (
+    event.target instanceof HTMLTextAreaElement &&
+    inputs.includes(event.target)
+  ) {
     const newExpression = event.target.value;
-    [jexlInput, jsInterpreterInput, quickjsEmscriptenInput, sesInput].forEach(
-      (element) => {
+    inputs
+      .filter((input) => input !== event.target)
+      .forEach((element) => {
         element.value = newExpression;
-      }
-    );
-
-    if (runAutomaticallyTimeout) {
-      clearTimeout(runAutomaticallyTimeout);
-    }
-    runAutomaticallyTimeout = setTimeout(runAll, 250);
+      });
   }
+
+  if (runAutomaticallyTimeout) {
+    clearTimeout(runAutomaticallyTimeout);
+  }
+  runAutomaticallyTimeout = setTimeout(runAll, 250);
 });
 
 benchmarkButton.addEventListener("click", (e) => {

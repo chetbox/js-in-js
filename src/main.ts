@@ -268,7 +268,8 @@ function runAll() {
         return new Compartment({ __getValue: null }); // placeholder for the function to compute the final value
       },
       compileExpression(compartment, expression) {
-        compartment.globalThis.__getValue = new compartment.globalThis.Function(
+        const globalThis = compartment.globalThis;
+        globalThis.__getValue = new globalThis.Function(
           `return (${expression || "undefined"});`
         );
       },

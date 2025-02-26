@@ -268,10 +268,8 @@ function runAll() {
         return new Compartment({ __getValue: null }); // placeholder for the function to compute the final value
       },
       compileExpression(compartment, expression) {
-        compartment.evaluate(
-          `this.__getValue = function __getValue() { return (${
-            expression || "undefined"
-          }); }`
+        compartment.globalThis.__getValue = new compartment.globalThis.Function(
+          `return (${expression || "undefined"});`
         );
       },
       setContext(compartment, context) {
@@ -281,7 +279,8 @@ function runAll() {
       },
       runExpression(compartment) {
         // Use .call with a `this` value when calling the function (1st arg) so the `this` part of the context can be accessed (otherwise it is just a reference to the globalThis object)
-        return compartment.evaluate("this.__getValue.call(this.this)");
+        const globalThis = compartment.globalThis;
+        return globalThis.__getValue.call(globalThis.this);
       },
     });
   } catch (error) {

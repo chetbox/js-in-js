@@ -258,26 +258,30 @@ function runAll() {
       },
     });
 
-    // SES - using Function constructor for globals
-    run<any, Compartment, Function>({
+    // SES
+    run<any, Compartment>({
       context,
       expression: sesInput.value,
       resultElement: sesResultOutput,
       performanceMetricsElement: sesPerformanceOutput,
       createVm() {
-        return new Compartment();
+        return new Compartment({ __getValue: null }); // placeholder for the function to compute the final value
       },
-      runExpression(compartment, expression, context) {
-        // `this` cannot be used as a variable name
-        const contextEntriesWithoutThis = Object.entries(context).filter(
-          ([key]) => key !== "this"
+      compileExpression(compartment, expression) {
+        compartment.evaluate(
+          `this.__getValue = function __getValue() { return (${
+            expression || "undefined"
+          }); }`
         );
-        return new compartment.globalThis.Function(
-          ...contextEntriesWithoutThis.map(([key]) => key),
-          `return () => (${expression || "undefined"})`
-        )(...contextEntriesWithoutThis.map(([, value]) => value)).call(
-          context.this
-        ); // Set the `this` value when calling the function so the `this` part of the context can be accesses (otherwise it is just a reference to the globalThis object)
+      },
+      setContext(compartment, context) {
+        for (const [key, value] of Object.entries(context)) {
+          compartment.globalThis[key] = value;
+        }
+      },
+      runExpression(compartment) {
+        // Use .call with a `this` value when calling the function (1st arg) so the `this` part of the context can be accessed (otherwise it is just a reference to the globalThis object)
+        return compartment.evaluate("this.__getValue.call(this.this)");
       },
     });
   } catch (error) {

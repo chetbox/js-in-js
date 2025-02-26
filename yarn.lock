@@ -9,10 +9,10 @@
   dependencies:
     regenerator-runtime "^0.14.0"
 
-"@endo/env-options@^1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@endo/env-options/-/env-options-1.1.0.tgz#468d18c6cab6aaa5be733ba067750624ba6bac2b"
-  integrity sha512-5D1AcZnoeaymT0yzccceyu1fbMJ7vqyrOluFC+ebVh7pDLcF5EqP27lyBdw1/GKSM60u1MOn9h9YVxmNC/Gi4A==
+"@endo/env-options@^1.1.8":
+  version "1.1.8"
+  resolved "https://registry.yarnpkg.com/@endo/env-options/-/env-options-1.1.8.tgz#dbfcfbf7574f2a793155281d035c8d6f809f5828"
+  integrity sha512-Xtxw9n33I4guo8q0sDyZiRuxlfaopM454AKiELgU7l3tqsylCut6IBZ0fPy4ltSHsBib7M3yF7OEMoIuLwzWVg==
 
 "@esbuild/aix-ppc64@0.19.11":
   version "0.19.11"
@@ -438,12 +438,12 @@ rollup@^4.2.0:
     "@rollup/rollup-win32-x64-msvc" "4.9.5"
     fsevents "~2.3.2"
 
-ses@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/ses/-/ses-1.1.0.tgz#bf174295bcb5951497629c1f44acb0d18e60220f"
-  integrity sha512-CV76CerfEe4EiV82YPLnaLdzt605nSmkyRiMDBiL/knNc5/ZZCVkU6yKAOcaYnlFkCW4hlDvV1WyGXZrwyE1yg==
+ses@^1.11.0:
+  version "1.11.0"
+  resolved "https://registry.yarnpkg.com/ses/-/ses-1.11.0.tgz#9ae54b18b48de3b962281970bfa01a91af108bd2"
+  integrity sha512-FydfDDnciRdVdFHM5u2jU1Qp+ZZyGGXYdEOy83d4CSPSxxEk5bzBd3s2yEsA1Q5TdaDxDN/SaOihx5E1gktIKQ==
   dependencies:
-    "@endo/env-options" "^1.1.0"
+    "@endo/env-options" "^1.1.8"
 
 source-map-js@^1.0.2:
   version "1.0.2"

@@ -86,7 +86,7 @@ function setQuickJsValue(
   }
 }
 
-function run<Context, VM>({
+function run<Context, VM, ContextResult = void>({
   context,
   expression,
   resultElement,
@@ -102,8 +102,13 @@ function run<Context, VM>({
   performanceMetricsElement: HTMLDivElement;
   createVm?: () => VM;
   compileExpression?: (vm: VM, expression: string) => VM | void;
-  setContext?: (vm: VM, context: Context) => VM | void;
-  runExpression: (vm: VM, expression: string, context: Context) => any;
+  setContext?: (vm: VM, context: Context) => ContextResult;
+  runExpression: (
+    vm: VM,
+    expression: string,
+    context: Context,
+    contextResult: ContextResult
+  ) => any;
 }) {
   const perfMeasurements: Partial<
     Record<"create VM" | "compile expr" | "set globals" | "run (avg)", number>
@@ -125,7 +130,7 @@ function run<Context, VM>({
     }
 
     start = performance.now();
-    vm = setContext?.(vm, context) ?? vm;
+    const contextResult = setContext?.(vm, context);
     if (setContext) {
       perfMeasurements["set globals"] = performance.now() - start;
     }
@@ -134,7 +139,12 @@ function run<Context, VM>({
     let result: any;
     for (let i = 0; i < runTimes; i++) {
       start = performance.now();
-      result = runExpression(vm, expression, context);
+      result = runExpression(
+        vm,
+        expression,
+        context,
+        contextResult as ContextResult
+      );
       times.push(performance.now() - start);
     }
     // Mean of N runs
@@ -248,18 +258,26 @@ function runAll() {
       },
     });
 
-    // SES
-    run<any, Compartment>({
+    // SES - using Function constructor for globals
+    run<any, Compartment, Function>({
       context,
       expression: sesInput.value,
       resultElement: sesResultOutput,
       performanceMetricsElement: sesPerformanceOutput,
-      setContext: (_, context) => {
-        return new Compartment(context);
+      createVm() {
+        return new Compartment();
       },
-      // TODO: optimise by compiling expression first
-      runExpression: (vm, expression) => {
-        return vm.evaluate(expression);
+      runExpression(compartment, expression, context) {
+        // `this` cannot be used as a variable name
+        const contextEntriesWithoutThis = Object.entries(context).filter(
+          ([key]) => key !== "this"
+        );
+        return new compartment.globalThis.Function(
+          ...contextEntriesWithoutThis.map(([key]) => key),
+          `return () => (${expression || "undefined"})`
+        )(...contextEntriesWithoutThis.map(([, value]) => value)).call(
+          context.this
+        ); // Set the `this` value when calling the function so the `this` part of the context can be accesses (otherwise it is just a reference to the globalThis object)
       },
     });
   } catch (error) {

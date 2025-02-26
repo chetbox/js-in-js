@@ -9,14 +9,15 @@
   <body>
     <div id="app">
       <div class="context">
-        <h2>Context (JSON)</h2>
+        <h2>Globals (JSON)</h2>
         <textarea id="context" class="expression" rows="10" cols="50">
 {
   "one": "one",
   "two": [2, "two"],
   "three": { 
     "items": [3, "three", false]
-  }
+  },
+  "this": {"value": 1, "type": "number"}
 }
 </textarea
         >

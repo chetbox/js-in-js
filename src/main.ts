@@ -273,8 +273,9 @@ function runAll() {
         );
       },
       setContext(compartment, context) {
+        const globalThis = compartment.globalThis;
         for (const [key, value] of Object.entries(context)) {
-          compartment.globalThis[key] = value;
+          globalThis[key] = value;
         }
       },
       runExpression(compartment) {

@@ -84,7 +84,7 @@ textarea {
 }
 
 .result.error,
-#context-error {
+#globals-error {
   color: darkred;
 }
 

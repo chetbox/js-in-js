@@ -9,9 +9,9 @@ import "ses";
 
 const QuickJS = await getQuickJS();
 
-const contextInput = document.querySelector<HTMLTextAreaElement>("#context")!;
-const contextErrorOutput =
-  document.querySelector<HTMLDivElement>("#context-error")!;
+const globalsInput = document.querySelector<HTMLTextAreaElement>("#globals")!;
+const globalsErrorOutput =
+  document.querySelector<HTMLDivElement>("#globals-error")!;
 
 const jexlInput =
   document.querySelector<HTMLTextAreaElement>("#jexl .expression")!;
@@ -86,28 +86,28 @@ function setQuickJsValue(
   }
 }
 
-function run<Context, VM, ContextResult = void>({
-  context,
+function run<Globals, VM, GlobalsResult = void>({
+  globals,
   expression,
   resultElement,
   performanceMetricsElement,
   createVm,
-  setContext,
+  setGlobals,
   compileExpression,
   runExpression,
 }: {
-  context: Context;
+  globals: Globals;
   expression: string;
   resultElement: HTMLTextAreaElement;
   performanceMetricsElement: HTMLDivElement;
-  createVm?: (context: Context) => VM;
+  createVm?: (globals: Globals) => VM;
   compileExpression?: (vm: VM, expression: string) => VM | void;
-  setContext?: (vm: VM, context: Context) => ContextResult;
+  setGlobals?: (vm: VM, globals: Globals) => GlobalsResult;
   runExpression: (
     vm: VM,
     expression: string,
-    context: Context,
-    contextResult: ContextResult
+    globals: Globals,
+    globalsResult: GlobalsResult
   ) => any;
 }) {
   const perfMeasurements: Partial<
@@ -118,7 +118,7 @@ function run<Context, VM, ContextResult = void>({
   let start = performance.now();
 
   try {
-    let vm = createVm?.(context) as VM;
+    let vm = createVm?.(globals) as VM;
     if (createVm) {
       perfMeasurements["create VM"] = performance.now() - start;
     }
@@ -130,8 +130,8 @@ function run<Context, VM, ContextResult = void>({
     }
 
     start = performance.now();
-    const contextResult = setContext?.(vm, context);
-    if (setContext) {
+    const globalsResult = setGlobals?.(vm, globals);
+    if (setGlobals) {
       perfMeasurements["set globals"] = performance.now() - start;
     }
 
@@ -142,8 +142,8 @@ function run<Context, VM, ContextResult = void>({
       result = runExpression(
         vm,
         expression,
-        context,
-        contextResult as ContextResult
+        globals,
+        globalsResult as GlobalsResult
       );
       times.push(performance.now() - start);
     }
@@ -171,36 +171,36 @@ function run<Context, VM, ContextResult = void>({
 type CogsSesCompartment = Compartment & {
   /** placeholder for the function to compute the final value */
   __getValue: () => unknown;
-  /** placeholder global "context" values*/
-  __context: Record<string, any>;
+  /** placeholder global values*/
+  __globals: Record<string, any>;
 };
 
 function runAll() {
   try {
-    const context = JSON.parse(contextInput.value);
-    contextErrorOutput.textContent = null;
+    const globals = JSON.parse(globalsInput.value);
+    globalsErrorOutput.textContent = null;
 
     // JEXL
     run<any, Expression>({
-      context,
+      globals,
       expression: jexlInput.value,
       resultElement: jexlResultOutput,
       performanceMetricsElement: jexlPerformanceOutput,
       compileExpression: (_, expression) => {
         return jexl.compile(expression);
       },
-      runExpression: (jexl, _, context) => {
-        return jexl.evalSync(context);
+      runExpression: (jexl, _, globals) => {
+        return jexl.evalSync(globals);
       },
     });
 
     // JS-Interpreter
     run({
-      context,
+      globals: globals,
       expression: jsInterpreterInput.value,
       resultElement: jsInterpreterResultOutput,
       performanceMetricsElement: jsInterpreterPerformanceOutput,
-      runExpression: (_, expression, context) => {
+      runExpression: (_, expression, globals) => {
         let result: any;
         let error: any;
         const interpreter = new JsInterpreter(
@@ -220,7 +220,7 @@ function runAll() {
                 error = value;
               })
             );
-            Object.entries(context).forEach(([key, value]) => {
+            Object.entries(globals).forEach(([key, value]) => {
               interpreter.setProperty(
                 globalObject,
                 key,
@@ -240,16 +240,16 @@ function runAll() {
 
     // quickjs-emscripten
     run({
-      context,
+      globals: globals,
       expression: quickjsEmscriptenInput.value,
       resultElement: quickjsEmscriptenResultOutput,
       performanceMetricsElement: quickjsEmscriptenPerformanceOutput,
       createVm: () => QuickJS.newContext(),
-      setContext: (vm, context) => {
-        Object.entries(context).forEach(([key, value]) => {
+      setGlobals: (vm, globals) => {
+        Object.entries(globals).forEach(([key, value]) => {
           setQuickJsValue(vm, vm.global, key, value);
         });
-        // TODO: dispose context values
+        // TODO: dispose globals values
       },
       runExpression: (vm, expression) => {
         const result = vm.evalCode(expression);
@@ -267,20 +267,20 @@ function runAll() {
 
     // SES
     run<any, CogsSesCompartment>({
-      context,
+      globals,
       expression: sesInput.value,
       resultElement: sesResultOutput,
       performanceMetricsElement: sesPerformanceOutput,
-      createVm(context) {
+      createVm(globals) {
         const compartment = new Compartment() as CogsSesCompartment;
         compartment.__getValue = () => undefined;
-        compartment.__context = {};
+        compartment.__globals = {};
 
-        // Lazy getters for context values
-        for (const key in context) {
+        // Lazy getters for global values
+        for (const key in globals) {
           Object.defineProperty(compartment.globalThis, key, {
             get() {
-              return compartment.__context[key];
+              return compartment.__globals[key];
             },
           });
         }
@@ -292,17 +292,17 @@ function runAll() {
           `return (${expression || "undefined"});`
         );
       },
-      setContext(compartment, context) {
-        compartment.__context = context;
+      setGlobals(compartment, globals) {
+        compartment.__globals = globals;
       },
       runExpression(compartment) {
-        // Use .call with a `this` value when calling the function (1st arg) so the `this` part of the context can be accessed (otherwise it is just a reference to the globalThis object)
-        return compartment.__getValue.call(context?.this);
+        // Use .call with a `this` value when calling the function (1st arg) so the `this` part of from globals can be accessed (otherwise it is just a reference to the globalThis object)
+        return compartment.__getValue.call(globals?.this);
       },
     });
   } catch (error) {
     console.log(error);
-    contextErrorOutput.textContent = (error as Error).message;
+    globalsErrorOutput.textContent = (error as Error).message;
     return;
   }
 }

@@ -100,7 +100,7 @@ function run<Context, VM, ContextResult = void>({
   expression: string;
   resultElement: HTMLTextAreaElement;
   performanceMetricsElement: HTMLDivElement;
-  createVm?: () => VM;
+  createVm?: (context: Context) => VM;
   compileExpression?: (vm: VM, expression: string) => VM | void;
   setContext?: (vm: VM, context: Context) => ContextResult;
   runExpression: (
@@ -118,7 +118,7 @@ function run<Context, VM, ContextResult = void>({
   let start = performance.now();
 
   try {
-    let vm = createVm?.() as VM;
+    let vm = createVm?.(context) as VM;
     if (createVm) {
       perfMeasurements["create VM"] = performance.now() - start;
     }
@@ -167,6 +167,13 @@ function run<Context, VM, ContextResult = void>({
     .map((num) => `<td>${num.toFixed(3)} ms</td>`)
     .join("")}</tr></tbody></table>`;
 }
+
+type CogsSesCompartment = Compartment & {
+  /** placeholder for the function to compute the final value */
+  __getValue: () => unknown;
+  /** placeholder global "context" values*/
+  __context: Record<string, any>;
+};
 
 function runAll() {
   try {
@@ -259,30 +266,38 @@ function runAll() {
     });
 
     // SES
-    run<any, Compartment>({
+    run<any, CogsSesCompartment>({
       context,
       expression: sesInput.value,
       resultElement: sesResultOutput,
       performanceMetricsElement: sesPerformanceOutput,
-      createVm() {
-        return new Compartment({ __getValue: null }); // placeholder for the function to compute the final value
+      createVm(context) {
+        const compartment = new Compartment() as CogsSesCompartment;
+        compartment.__getValue = () => undefined;
+        compartment.__context = {};
+
+        // Lazy getters for context values
+        for (const key in context) {
+          Object.defineProperty(compartment.globalThis, key, {
+            get() {
+              return compartment.__context[key];
+            },
+          });
+        }
+
+        return compartment;
       },
       compileExpression(compartment, expression) {
-        const globalThis = compartment.globalThis;
-        globalThis.__getValue = new globalThis.Function(
+        compartment.__getValue = new compartment.globalThis.Function(
           `return (${expression || "undefined"});`
         );
       },
       setContext(compartment, context) {
-        const globalThis = compartment.globalThis;
-        for (const [key, value] of Object.entries(context)) {
-          globalThis[key] = value;
-        }
+        compartment.__context = context;
       },
       runExpression(compartment) {
         // Use .call with a `this` value when calling the function (1st arg) so the `this` part of the context can be accessed (otherwise it is just a reference to the globalThis object)
-        const globalThis = compartment.globalThis;
-        return globalThis.__getValue.call(globalThis.this);
+        return compartment.__getValue.call(context?.this);
       },
     });
   } catch (error) {
